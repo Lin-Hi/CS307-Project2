@@ -1,6 +1,6 @@
 import csv
 import psycopg2
-import execute_values
+from psycopg2 import extras
 
 conn = psycopg2.connect("host=localhost dbname=cs307_3 user=checker password=123456")
 cur = conn.cursor()
@@ -8,7 +8,7 @@ cur = conn.cursor()
 
 def load_data(cur, path, table, page_size=100):
     list = []
-    with open(path, 'r') as f:
+    with open(path, 'r', encoding='utf-8') as f:
         reader = csv.reader(f)
         for row in reader:
             one_record = []
@@ -38,7 +38,8 @@ def end():
 
 def stockIn():
     cur.execute("""truncate stock;""")
-    with open(r'D:\Program\Pycharm\CS307\Project2\files\task1_in_stoke_test_data_publish.csv', 'r') as f:
+    with open(r'D:\Program\Pycharm\CS307\Project2\files\task1_in_stoke_test_data_publish.csv', 'r',
+              encoding='utf-8') as f:
         f.readline()
         reader = csv.reader(f)
         for row in reader:
@@ -97,7 +98,7 @@ def getCenterByStaffNumber(staff_number: str) -> str:
 
 
 def placeOrder():
-    f = open(r'D:\Program\Pycharm\CS307\Project2\files\task2_test_data_publish.csv', 'r')
+    f = open(r'D:\Program\Pycharm\CS307\Project2\files\task2_test_data_publish.csv', 'r', encoding='utf-8')
     f.readline()
     reader = csv.reader(f)
     for row in reader:
@@ -172,7 +173,7 @@ def whetherStorageEnough(enterprise: str, product_model: str, quantity: int) -> 
 
 
 def updateOrder():
-    f = open(r'D:\Program\Pycharm\CS307\Project2\files\task34_update_test_data_publish.tsv', 'r')
+    f = open(r'D:\Program\Pycharm\CS307\Project2\files\task34_update_test_data_publish.tsv', 'r', encoding='utf-8')
     f.readline()
     reader = csv.reader(f)
     for row in reader:
@@ -251,7 +252,7 @@ def whetherSalesmanHasOrder(salesman_number: str, contract_number: str, product_
 
 
 def deleteOrder():
-    f = open(r'D:\Program\Pycharm\CS307\Project2\files\task34_delete_test_data_publish.tsv', 'r')
+    f = open(r'D:\Program\Pycharm\CS307\Project2\files\task34_delete_test_data_publish.tsv', 'r', encoding='utf-8')
     f.readline()
     reader = csv.reader(f)
     for row in reader:
@@ -522,12 +523,12 @@ if __name__ == '__main__':
     # contract_number_list = input('contract number: ').split(' ')
     product_number_list = ['A50L172']
     contract_number_list = ['CSE0000106', 'CSE0000209', 'CSE0000306']
-    # execute_values.importFour()
+    importFour()
     stockIn()
     # placeOrder()
     # updateOrder()
     # deleteOrder()
-    # f = open(r'D:\Program\Pycharm\CS307\Project2\my_output.txt', 'w')
+    # f = open(r'D:\Program\Pycharm\CS307\Project2\my_output.txt', 'w',encoding='utf-8')
     # f.write(oneStepExport(product_number_list, contract_number_list))
     # f.close()
     end()
