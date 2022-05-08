@@ -523,9 +523,9 @@ if __name__ == '__main__':
     # contract_number_list = input('contract number: ').split(' ')
     product_number_list = ['A50L172']
     contract_number_list = ['CSE0000106', 'CSE0000209', 'CSE0000306']
-    importFour()
-    stockIn()
-    # placeOrder()
+    # importFour()
+    # stockIn()
+    placeOrder()
     # updateOrder()
     # deleteOrder()
     # f = open(r'D:\Program\Pycharm\CS307\Project2\my_output.txt', 'w',encoding='utf-8')

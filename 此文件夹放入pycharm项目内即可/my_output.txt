@@ -1,0 +1,34 @@
+Q6
+Director              8
+Contracts Manager     160
+Salesman              640
+Supply Staff          192
+Q7 84
+Q8 84
+Q9 None
+Q10
+Hand-HeldGamingDeviceR5     1192
+Q11
+Q12
+supply_center     product_model     quantity
+Q13
+contract_number: CSE0000106
+enterprise: Zhang Wanzhi
+manager: Pinduoduo
+supply_center: Eastern China
+product_model      salesman      quantity     unit_price     estimated_delivery_date    lodgement_date
+DigitalFrame48     Qi Yishan     1            340            <272022-01-11
+Q13
+contract_number: CSE0000209
+enterprise: Kong Yuandong
+manager: Rwe Group
+supply_center: Europe
+product_model     salesman            quantity     unit_price     estimated_delivery_date    lodgement_date
+Tripod50          Hamilton Thomas     1            870            <272022-02-14
+Q13
+contract_number: CSE0000306
+enterprise: Jing Ziyan
+manager: Fannie Mae
+supply_center: America
+product_model                    salesman          quantity     unit_price     estimated_delivery_date    lodgement_date
+MicrophoneDigitalCompanionF7     Lenny Jackson     530          680            <272022-03-11
