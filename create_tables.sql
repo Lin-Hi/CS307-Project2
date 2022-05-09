@@ -67,11 +67,6 @@ create table storage
     product_model       varchar
         constraint storage_model_model_fk
             references model,
-    supply_staff_number varchar
-        constraint storage_staff_number_fk
-            references staff,
-    date                date,
-    purchase_price      int,
     quantity            int,
     constraint storage_pk
         primary key (supply_center, product_model)
@@ -107,6 +102,6 @@ create table "order"
     estimated_delivery_date date,
     lodgement_date          date,
     constraint order_pk
-        primary key (contract_number, product_model)
+        primary key (contract_number, product_model, salesman_number)
 );
 

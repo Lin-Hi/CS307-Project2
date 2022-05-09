@@ -1,6 +1,7 @@
 import csv
 import psycopg2
 from psycopg2 import extras
+from typing import List
 
 conn = psycopg2.connect("host=localhost dbname=cs307_3 user=checker password=123456")
 cur = conn.cursor()
@@ -9,10 +10,15 @@ cur = conn.cursor()
 def load_data(cur, path, table, page_size=100):
     list = []
     with open(path, 'r', encoding='utf-8') as f:
+        f.readline()
         reader = csv.reader(f)
         for row in reader:
             one_record = []
+            c = True
             for item in row:
+                if c:
+                    c = False
+                    continue
                 if item != '':
                     one_record.append(item)
                 else:
@@ -24,7 +30,7 @@ def load_data(cur, path, table, page_size=100):
 def importFour():
     cur.execute(
         """truncate table center,contract,enterprise,model,"order",staff,stock,storage cascade;""")
-    path_pre = r'D:\Program\Pycharm\CS307\Project2\files'
+    path_pre = "files"
     page_size = 1000
     load_data(cur, path_pre + '/center.csv', 'center', page_size)
     load_data(cur, path_pre + '/enterprise.csv', 'enterprise', page_size)
@@ -34,11 +40,11 @@ def importFour():
 
 def end():
     conn.commit()
+    conn.close()
 
 
 def stockIn():
-    cur.execute("""truncate stock;""")
-    with open(r'D:\Program\Pycharm\CS307\Project2\files\task1_in_stoke_test_data_publish.csv', 'r',
+    with open(r'files\task1_in_stoke_test_data_publish.csv', 'r',
               encoding='utf-8') as f:
         f.readline()
         reader = csv.reader(f)
@@ -58,6 +64,24 @@ def stockIn():
                     cur.execute("""insert into stock (supply_center, product_model, supply_staff_number, date, purchase_price, quantity) 
                                 values ('%s', '%s', '%s', to_date('%s', 'yyyy-mm-dd'), '%s', '%s');"""
                                 % (supply_center, product_model, supply_staff_num, date, purchase_price, quantity))
+                    # update storage
+                    cur.execute("""select s.quantity
+                                    from storage s
+                                    where s.product_model = '%s'
+                                      and s.supply_center = '%s';"""
+                                % (product_model, supply_center))
+                    ans = cur.fetchall()
+                    conn.commit()
+                    if len(ans) == 0:
+                        cur.execute("""insert into storage (supply_center, product_model, quantity) 
+                                    values ('%s', '%s', '%s');"""
+                                    % (supply_center, product_model, quantity))
+                    else:
+                        cur.execute("""update storage
+                                        set quantity = %d
+                                        where supply_center = '%s'
+                                          and product_model = '%s';""" % (
+                            int(ans[0][0]) + int(quantity), supply_center, product_model))
             except psycopg2.Error as e:
                 print(e)
             continue
@@ -66,22 +90,29 @@ def stockIn():
 
 def whetherStaffExist(staff_number: str) -> bool:
     cur.execute("""select count(*) from staff where number = '%s';""" % staff_number)
-    return int(cur.fetchall()[0][0]) > 0
+    ans = int(cur.fetchall()[0][0]) > 0
+    conn.commit()
+    return ans
 
 
 def whetherProductModelExist(product_model: str) -> bool:
     cur.execute("""select count(*) from model where model.model = '%s';""" % product_model)
-    return int(cur.fetchall()[0][0]) > 0
+    ans = int(cur.fetchall()[0][0]) > 0
+    conn.commit()
+    return ans
 
 
 def whetherSupplyCenterExist(supply_center: str) -> bool:
     cur.execute("""select count(*) from center where name = '%s';""" % supply_center)
-    return int(cur.fetchall()[0][0]) > 0
+    ans = int(cur.fetchall()[0][0]) > 0
+    conn.commit()
+    return ans
 
 
 def getStaffTypeByStaffNumber(staff_number: str) -> str:
     cur.execute("""select type from staff where number = '%s';""" % staff_number)
     ans = cur.fetchall()
+    conn.commit()
     if len(ans) == 0:
         return ''
     else:
@@ -91,6 +122,7 @@ def getStaffTypeByStaffNumber(staff_number: str) -> str:
 def getCenterByStaffNumber(staff_number: str) -> str:
     cur.execute("""select supply_center from staff where number = '%s';""" % staff_number)
     ans = cur.fetchall()
+    conn.commit()
     if len(ans) == 0:
         return ''
     else:
@@ -98,7 +130,7 @@ def getCenterByStaffNumber(staff_number: str) -> str:
 
 
 def placeOrder():
-    f = open(r'D:\Program\Pycharm\CS307\Project2\files\task2_test_data_publish.csv', 'r', encoding='utf-8')
+    f = open(r'files\task2_test_data_publish.csv', 'r', encoding='utf-8')
     f.readline()
     reader = csv.reader(f)
     for row in reader:
@@ -113,23 +145,41 @@ def placeOrder():
             lodgement_date = row[7]
             salesman_num = row[8]
             contract_type = row[9]
-            if whetherContractNumberExist(contract_num):
+            if whetherStorageEnough(enterprise, product_model, quantity) and \
+                    getStaffTypeByStaffNumber(salesman_num) == 'Salesman':
+                if not whetherContractNumberExist(contract_num):
+                    cur.execute("""insert into contract values ('%s', '%s', '%s', '%s', '%s');"""
+                                % (contract_num, contract_manager_num, enterprise, contract_type, contract_date))
+                    # print('insert into contract !')
                 if whetherContractInformationCorrect(contract_num, enterprise, contract_manager_num, contract_date,
-                                                     contract_type) and \
-                        whetherStorageEnough(enterprise, product_model, quantity) and \
-                        getStaffTypeByStaffNumber(salesman_num) == 'Salesman':
+                                                     contract_type):
                     cur.execute("""insert into "order" values ('%s', '%s', '%s', '%s', '%s', '%s');"""
                                 % (contract_num, product_model, salesman_num, quantity, estimated_delivery_date,
                                    lodgement_date))
-            else:
-                cur.execute("""insert into contract values ('%s', '%s', '%s', '%s', '%s');"""
-                            % (contract_num, contract_manager_num, enterprise, contract_type, contract_date))
-                cur.execute("""insert into "order" values ('%s', '%s', '%s', '%s', '%s', '%s');"""
-                            % (contract_num, product_model, salesman_num, quantity, estimated_delivery_date,
-                               lodgement_date))
-        except psycopg2.Error:
-            pass
-        continue
+                    # print("insert into order !")
+                    # update storage
+                    cur.execute("""select e.supply_center from enterprise e where e.name = '%s';"""
+                                % enterprise)
+                    ans = cur.fetchall()
+                    conn.commit()
+                    supply_center = ans[0][0]
+                    cur.execute("""select s.quantity
+                                from storage s
+                                where s.product_model = '%s'
+                                  and s.supply_center = '%s';"""
+                                % (product_model, supply_center))
+                    ans = cur.fetchall()
+                    conn.commit()
+                    new_quantity = str(int(ans[0][0]) - quantity)
+                    cur.execute("""update storage
+                                    set quantity = {}
+                                    where supply_center = '{}'
+                                      and product_model = '{}';""" .format(
+                        new_quantity, supply_center, product_model))
+        except psycopg2.Error as e:
+            print(e)
+            conn.rollback()
+            continue
     return
 
 
@@ -137,7 +187,9 @@ def whetherContractNumberExist(contract_number: str) -> bool:
     cur.execute("""select count(*)
                     from contract
                     where contract_number = '%s';""" % contract_number)
-    return int(cur.fetchall()[0][0]) > 0
+    ans = int(cur.fetchall()[0][0]) > 0
+    conn.commit()
+    return ans
 
 
 def whetherContractInformationCorrect(contract_number: str, enterprise: str, contract_manager: str, contract_date: str,
@@ -151,6 +203,7 @@ def whetherContractInformationCorrect(contract_number: str, enterprise: str, con
                       and contract_date = '%s';"""
                 % (contract_number, contract_manager, enterprise, contract_type, contract_date))
     ans = cur.fetchall()
+    conn.commit()
     if len(ans) == 0:
         return False
     else:
@@ -166,6 +219,7 @@ def whetherStorageEnough(enterprise: str, product_model: str, quantity: int) -> 
                                               where e.name = '%s');"""
                 % (product_model, enterprise))
     ans = cur.fetchall()
+    conn.commit()
     if len(ans) == 0:
         return False
     else:
@@ -173,7 +227,7 @@ def whetherStorageEnough(enterprise: str, product_model: str, quantity: int) -> 
 
 
 def updateOrder():
-    f = open(r'D:\Program\Pycharm\CS307\Project2\files\task34_update_test_data_publish.tsv', 'r', encoding='utf-8')
+    f = open(r'files\task34_update_test_data_publish.tsv', 'r', encoding='utf-8')
     f.readline()
     reader = csv.reader(f)
     for row in reader:
@@ -186,6 +240,7 @@ def updateOrder():
             estimate_delivery_date = content[4]
             lodgement_date = content[5]
             if whetherSalesmanHasOrder(salesman_number, contract_number, product_model):
+
                 cur.execute("""select s.quantity
                                         from storage s
                                         where s.product_model = '%s'
@@ -196,22 +251,25 @@ def updateOrder():
                                                                                  where c.contract_number = '%s'));"""
                             % (product_model, contract_number))
                 res = cur.fetchall()
-                original_storage_quantity = 0
+                conn.commit()
                 if len(res) == 0:
                     continue
                 else:
                     original_storage_quantity = int(res[0][0])
+
                 cur.execute("""select o.quantity
                                 from "order" o
                                 where o.contract_number = '%s'
-                                  and product_model = '%s';""" % (contract_number, product_model))
+                                  and product_model = '%s'
+                                  and salesman_number = '%s';""" % (contract_number, product_model, salesman_number))
                 res = cur.fetchall()
-                original_order_quantity = 0
+                conn.commit()
                 if len(res) == 0:
                     continue
                 else:
                     original_order_quantity = int(res[0][0])
                 new_storage_quantity = original_storage_quantity + original_order_quantity - quantity
+
                 if new_storage_quantity >= 0:
                     cur.execute("""update "order"
                                     set quantity                = %d,
@@ -235,9 +293,11 @@ def updateOrder():
                         cur.execute("""delete
                                         from "order"
                                         where product_model = '%s'
-                                          and contract_number = '%s'""" % (product_model, contract_number))
-        except psycopg2.Error:
-            pass
+                                          and contract_number = '%s'
+                                          and salesman_number = '%s';""" % (
+                            product_model, contract_number, salesman_number))
+        except psycopg2.Error as e:
+            print(e)
         continue
     return
 
@@ -248,11 +308,13 @@ def whetherSalesmanHasOrder(salesman_number: str, contract_number: str, product_
                     where salesman_number = '%s'
                       and product_model = '%s'
                       and contract_number = '%s';""" % (salesman_number, product_model, contract_number))
-    return cur.fetchall()[0][0] > 0
+    ans = cur.fetchall()[0][0] > 0
+    conn.commit()
+    return ans
 
 
 def deleteOrder():
-    f = open(r'D:\Program\Pycharm\CS307\Project2\files\task34_delete_test_data_publish.tsv', 'r', encoding='utf-8')
+    f = open(r'files\task34_delete_test_data_publish.tsv', 'r', encoding='utf-8')
     f.readline()
     reader = csv.reader(f)
     for row in reader:
@@ -268,11 +330,12 @@ def deleteOrder():
                                       and o1.contract_number = '%s') t1
                               where t1.row_number = %s) t2""" % (salesman_number, contract_number, seq))
         res = cur.fetchall()
-        product_model = ''
+        conn.commit()
         if len(res) == 0:
             continue
         else:
             product_model = res[0][0]
+
         cur.execute("""select e.supply_center
                         from enterprise e
                         where e.name =
@@ -280,36 +343,41 @@ def deleteOrder():
                                from contract
                                where contract_number = '%s');""" % contract_number)
         res = cur.fetchall()
-        supply_center = ''
+        conn.commit()
         if len(res) == 0:
             continue
         else:
             supply_center = res[0][0]
+
         cur.execute("""select quantity
                         from "order"
                         where contract_number = '%s'
-                          and product_model = '%s';""" % (contract_number, product_model))
+                          and product_model = '%s'
+                          and salesman_number = '%s';""" % (contract_number, product_model, salesman_number))
         res = cur.fetchall()
-        order_quantity = 0
+        conn.commit()
         if len(res) == 0:
             continue
         else:
             order_quantity = int(res[0][0])
+
         cur.execute("""select s.quantity
                         from storage s
                         where s.supply_center = '%s'
                           and s.product_model = '%s';""" % (supply_center, product_model))
         res = cur.fetchall()
-        initial_storage_quantity = 0
+        conn.commit()
         if len(res) == 0:
             continue
         else:
             initial_storage_quantity = int(res[0][0])
         new_storage_quantity = initial_storage_quantity + order_quantity
+
         cur.execute("""delete
                         from "order"
                         where product_model = '%s'
-                          and contract_number = '%s';""" % (product_model, contract_number))
+                          and contract_number = '%s'
+                          and salesman_number = '%s';""" % (product_model, contract_number, salesman_number))
         cur.execute("""update storage
                         set quantity = %d
                         where supply_center = '%s'
@@ -317,27 +385,33 @@ def deleteOrder():
     return
 
 
-def getAllStaffCount() -> list[[str]]:
+def getAllStaffCount():
     cur.execute("""select type, count(*)
                     from staff
                     group by type;""")
-    return cur.fetchall()
+    ans = cur.fetchall()
+    conn.commit()
+    return ans
 
 
 def getContractCount() -> str:
     cur.execute("""select count(*)
                     from contract;""")
-    return cur.fetchall()[0][0]
+    ans = cur.fetchall()[0][0]
+    conn.commit()
+    return ans
 
 
 def getOrderCount() -> str:
     cur.execute("""select count(*)
                     from "order";""")
-    return cur.fetchall()[0][0]
+    ans = cur.fetchall()[0][0]
+    conn.commit()
+    return ans
 
 
 def getNeverSoldProductCount() -> str:
-    cur.execute("""select sum(quantity)
+    cur.execute("""select count(distinct product_model)
                     from storage
                     where quantity > 0
                       and product_model in (select product_model
@@ -347,10 +421,12 @@ def getNeverSoldProductCount() -> str:
                                             from "order"
                                                      join contract on "order".contract_number = contract.contract_number
                                             where contract.contract_type = 'Finished');""")
-    return cur.fetchall()[0][0]
+    ans = cur.fetchall()[0][0]
+    conn.commit()
+    return ans
 
 
-def getFavoriteProductModel() -> list[[str]]:
+def getFavoriteProductModel():
     cur.execute("""with t2 as (with t1 as (select o.product_model, sum(o.quantity) as total_sale
                                                 from "order" o
                                                          join contract c on o.contract_number = c.contract_number
@@ -362,34 +438,40 @@ def getFavoriteProductModel() -> list[[str]]:
                         from t2
                         where t2.r = 1;""")
     res = cur.fetchall()
+    conn.commit()
     return res
 
 
-def getAvgStockByCenter() -> list[[str]]:
+def getAvgStockByCenter():
     cur.execute("""with count as (select supply_center, count(*) as cnt from storage group by supply_center)
-                    select storage.supply_center, round(1.0 * sum(quantity) over (partition by storage.supply_center) / cnt,1) as average
+                    select distinct storage.supply_center, round(1.0 * sum(quantity) over (partition by storage.supply_center) / cnt,1) as average
                     from storage
                              join count on count.supply_center = storage.supply_center
                     order by storage.supply_center;""")
-    return cur.fetchall()
+    ans = cur.fetchall()
+    conn.commit()
+    return ans
 
 
-def getProductByNumber(model_number: str) -> list[[str]]:
-    cur.execute("""select stock.supply_center, stock.product_model, stock.quantity
-                    from stock
-                             join model on stock.product_model = model.model
+def getProductByNumber(model_number: str):
+    cur.execute("""select s.supply_center, s.product_model, s.quantity
+                    from storage s
+                             join model on s.product_model = model.model
                     where model.number = '%s';""" % model_number)
-    return cur.fetchall()
+    ans = cur.fetchall()
+    conn.commit()
+    return ans
 
 
-def getContractInfo(contract_number: str) -> (list[str], list[list[str]]):
+def getContractInfo(contract_number: str) -> (List[str], List[List[str]]):
     cur.execute("""select c.contract_number,
-                           (select s.name from staff s where s.number = c.contract_manager_number) as contract_manager_name,
                            c.enterprise_name,
+                           (select s.name from staff s where s.number = c.contract_manager_number) as contract_manager_name,
                            (select e.supply_center from enterprise e where e.name = c.enterprise_name) as supply_center
                     from contract c
                     where c.contract_number = '%s';""" % contract_number)
     res = cur.fetchall()
+    conn.commit()
     list_contract = [str]
     if len(res) != 0:
         list_contract = res[0]
@@ -402,6 +484,7 @@ def getContractInfo(contract_number: str) -> (list[str], list[list[str]]):
                     from "order" o
                     where o.contract_number = '%s';""" % contract_number)
     res = cur.fetchall()
+    conn.commit()
     list_order = [[str]]
     if len(res) != 0:
         list_order = res
@@ -455,7 +538,7 @@ def oneStepExport(product_number_list: [str], contract_number_list: [str]) -> st
     length_11 += 5
     output_11 = 'Q11\n'
     for row in q11_list:
-        output_11 += ('{center:<' + str(length_11) + '}{num}').format(center=row[0], num=row[1])
+        output_11 += ('{center:<' + str(length_11) + '}{num}\n').format(center=row[0], num=row[1])
     final_output += output_11
 
     # Q12
@@ -472,7 +555,7 @@ def oneStepExport(product_number_list: [str], contract_number_list: [str]) -> st
         output_12 += ('{center:<' + str(length0_12) + '}{model:<' + str(length1_12) + '}{quantity}\n').format(
             center='supply_center', model='product_model', quantity='quantity')
         for row in q12_list:
-            output_12 += ('{center:<' + str(length0_12) + '}{model:<' + length1_12 + '}{quantity}\n').format(
+            output_12 += ('{center:<' + str(length0_12) + '}{model:<' + str(length1_12) + '}{quantity}\n').format(
                 center=row[0], model=row[1], quantity=row[2])
         final_output += output_12
 
@@ -480,7 +563,7 @@ def oneStepExport(product_number_list: [str], contract_number_list: [str]) -> st
     for contract_number in contract_number_list:
         q13_list1, q13_list2 = getContractInfo(contract_number)
         output_13 = 'Q13\n'
-        if len(q13_list1) != 0:
+        if len(q13_list1) > 3:
             output_13 += 'contract_number: {}\n' \
                          'enterprise: {}\n' \
                          'manager: {}\n' \
@@ -491,44 +574,49 @@ def oneStepExport(product_number_list: [str], contract_number_list: [str]) -> st
         length2_13 = 8
         length3_13 = 10
         length4_13 = 22
-        for row in q13_list2:
-            length0_13 = max(length0_13, len(str(row[0])))
-            length1_13 = max(length1_13, len(str(row[1])))
-            length2_13 = max(length2_13, len(str(row[2])))
-            length3_13 = max(length3_13, len(str(row[3])))
-            length4_13 = max(length4_13, len(str(row[4])))
-        length0_13 += 5
-        length1_13 += 5
-        length2_13 += 5
-        length3_13 += 5
-        length4_13 += 5
-        output_13 += (
-                '{:<' + str(length0_13) + '}{:<' + str(length1_13) + '}{:<' + str(length2_13) + '}{:<' + str(
-            length3_13) + '}{:<' + str(length4_13) + '}{}\n').format(
-            'product_model', 'salesman', 'quantity', 'unit_price', 'estimated_delivery_date', 'lodgement_date'
-        )
-        for row in q13_list2:
+
+        if len(q13_list2[0]) == 6:
+            for row in q13_list2:
+                length0_13 = max(length0_13, len(str(row[0])))
+                length1_13 = max(length1_13, len(str(row[1])))
+                length2_13 = max(length2_13, len(str(row[2])))
+                length3_13 = max(length3_13, len(str(row[3])))
+                length4_13 = max(length4_13, len(str(row[4])))
+            length0_13 += 5
+            length1_13 += 5
+            length2_13 += 5
+            length3_13 += 5
+            length4_13 += 5
             output_13 += (
-                    '{0:<' + str(length0_13) + '}{1:<' + str(length1_13) + '}{2:<' + str(length2_13) + '}{3:<' + str(
-                length3_13) + '}{4:<' + str(length4_13) + '}{5}\n').format(
-                row[0], row[1], row[2], row[3], row[4], row[5]
+                    '{:<' + str(length0_13) + '}{:<' + str(length1_13) + '}{:<' + str(length2_13) + '}{:<' + str(
+                length3_13) + '}{:<' + str(length4_13) + '}{}\n').format(
+                'product_model', 'salesman', 'quantity', 'unit_price', 'estimate_delivery_date', 'lodgement_date'
             )
+            for row in q13_list2:
+                output_13 += (
+                        '{0:<' + str(length0_13) + '}{1:<' + str(length1_13) + '}{2:<' + str(length2_13) + '}{3:<' + str(
+                    length3_13) + '}{4:<' + str(length4_13) + '}{5}\n').format(
+                    row[0], row[1], row[2], row[3], str(row[4]), str(row[5])
+                )
         final_output += output_13
 
     return final_output
 
 
 if __name__ == '__main__':
-    # product_number_list = input('product number: ').split(' ')
-    # contract_number_list = input('contract number: ').split(' ')
     product_number_list = ['A50L172']
     contract_number_list = ['CSE0000106', 'CSE0000209', 'CSE0000306']
-    # importFour()
-    # stockIn()
+    importFour()
+    conn.commit()
+    stockIn()
+    conn.commit()
     placeOrder()
-    # updateOrder()
-    # deleteOrder()
-    # f = open(r'D:\Program\Pycharm\CS307\Project2\my_output.txt', 'w',encoding='utf-8')
-    # f.write(oneStepExport(product_number_list, contract_number_list))
-    # f.close()
+    conn.commit()
+    updateOrder()
+    conn.commit()
+    deleteOrder()
+    conn.commit()
+    f = open('my_output.txt', 'w', encoding='utf-8')
+    f.write(oneStepExport(product_number_list, contract_number_list))
+    f.close()
     end()
