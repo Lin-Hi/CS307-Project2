@@ -1,0 +1,57 @@
+Q6
+Director              8
+Contracts Manager     160
+Salesman              640
+Supply Staff          192
+Q7 112
+Q8 529
+Q9 55
+Q10
+WirelessSecurity90     1762
+Q11
+America                                          303.4
+Asia                                             226.4
+Eastern China                                    183.9
+Europe                                           322.8
+Hong Kong, Macao and Taiwan regions of China     267.4
+Northern China                                   224.6
+Southern China                                   234.2
+Southwestern China                               313.6
+Q12
+supply_center                                    product_model             quantity
+Hong Kong, Macao and Taiwan regions of China     Air-ConditioningFan21     299
+Q13
+contract_number: CSE0000106
+enterprise: Ping An Insurance (Group) Company Of China
+manager: Brian Brown
+supply_center: Southern China
+product_model                        salesman          quantity     unit_price     estimate_delivery_date     lodgement_date
+ToiletSeatM4                         Liu Hanshuang     350          110            2022-01-10                 2022-01-11
+Server40                             Sun Yankun        304          220            2022-01-12                 2022-01-12
+CasetteLibraryI1                     Qi Yinxiang       390          460            2022-01-11                 2022-01-11
+HeatSink24                           Tao Xixia         140          400            2022-01-10                 2022-01-12
+BarcodeAndCardReadingEquipment34     Chu Guqiu         491          790            2022-01-10                 2022-01-12
+SoundCard93                          Trudie Lewis      374          10             2022-01-11                 2022-01-10
+Q13
+contract_number: CSE0000209
+enterprise: Sinopec
+manager: Joseph Davies
+supply_center: Northern China
+product_model                                                  salesman           quantity     unit_price     estimate_delivery_date     lodgement_date
+Earphone27                                                     Yang Nuobo         14           790            2022-02-15                 2022-02-12
+DotMatrixPrinter76                                             Susan Johnson      142          190            2022-02-15                 2022-02-15
+DvdPlayer89                                                    Allen Williams     73           400            2022-02-12                 2022-02-12
+NetworkManagementAndBackupSoftwarevirtualizationSoftware51     Feng Jingping      131          100            2022-03-03                 2022-02-12
+Q13
+contract_number: CSE0000306
+enterprise: Ping An Insurance (Group) Company Of China
+manager: You Dongsi
+supply_center: Southern China
+product_model                        salesman           quantity     unit_price     estimate_delivery_date     lodgement_date
+FlatFilm23                           You Bisong         41           90             2022-03-12                 2022-03-10
+Server40                             Georgie Taylor     76           220            2022-03-12                 2022-03-11
+Anti-TheftAlarmHost23                Hua Haonan         320          220            2022-03-09                 2022-03-10
+Mp4Z2                                Olive Wright       61           650            2022-03-11                 2022-03-10
+ElectricHeaterE3                     Mildred Wright     79           270            2022-03-12                 2022-03-11
+PocketPcV3                           Jill Thomas        189          530            2022-02-11                 2022-03-09
+BarcodeAndCardReadingEquipment34     Ollie Smith        245          790            2022-03-11                 2022-03-10
