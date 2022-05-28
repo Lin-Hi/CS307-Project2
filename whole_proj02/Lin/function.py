@@ -3,8 +3,11 @@ from typing import List
 
 import psycopg2
 from psycopg2 import extras
+from psycopg2.pool import ThreadedConnectionPool
 
-conn = psycopg2.connect("host=localhost dbname=cs307_3 user=checker password=123456")
+pool = ThreadedConnectionPool(5, 100, "dbname=cs307_2 user=checker password=123456 host=localhost")  # 创建连接池连接
+conn = pool.getconn()
+# conn = psycopg2.connect("host=localhost dbname=cs307_2 user=checker password=123456")
 cur = conn.cursor()
 
 
@@ -26,6 +29,7 @@ def load_data(cur, path, table, page_size=100):
                     one_record.append(None)
             list.append(one_record)
     psycopg2.extras.execute_values(cur, "INSERT INTO " + table + " VALUES %s;", list, page_size=page_size)
+    conn.commit()
 
 
 def importFour():
@@ -41,11 +45,16 @@ def importFour():
 
 def end():
     conn.commit()
-    conn.close()
+    # conn.close()
+    # close all connection
+    pool.putconn(conn, key=None, close=False)  # 这里close设置为true则会从连接池中关闭conn对象的连接
+    pool.closeall()  # 会关闭连接池内所有的连接
 
 
 def stockIn():
-    with open(r'files\task1_in_stoke_test_data_publish.csv', 'r',
+    # with open(r'files\task1_in_stoke_test_data_publish.csv', 'r',
+    #           encoding='utf-8') as f:
+    with open(r'files\in_stoke_test.csv', 'r',
               encoding='utf-8') as f:
         f.readline()
         reader = csv.reader(f)
@@ -131,11 +140,13 @@ def getCenterByStaffNumber(staff_number: str) -> str:
 
 
 def placeOrder():
-    f = open(r'files\task2_test_data_publish.csv', 'r', encoding='utf-8')
+    # f = open(r'files\task2_test_data_publish.csv', 'r', encoding='utf-8')
+    f = open(r'files\task2_test_data_final_public.tsv', 'r', encoding='utf-8')
     f.readline()
     reader = csv.reader(f)
     for row in reader:
         try:
+            content = row[0].split('\t')
             contract_num = row[0]
             enterprise = row[1]
             product_model = row[2]
@@ -228,7 +239,8 @@ def whetherStorageEnough(enterprise: str, product_model: str, quantity: int) -> 
 
 
 def updateOrder():
-    f = open(r'files\task34_update_test_data_publish.tsv', 'r', encoding='utf-8')
+    # f = open(r'files\task34_update_test_data_publish.tsv', 'r', encoding='utf-8')
+    f = open(r'files\update_final_test.tsv', 'r', encoding='utf-8')
     f.readline()
     reader = csv.reader(f)
     for row in reader:
@@ -319,7 +331,8 @@ def deleteOrder():
     f.readline()
     reader = csv.reader(f)
     for row in reader:
-        content = row[0].split('\t')
+        # content = row[0].split('\t')
+        content = row[0].split(' ')
         contract_number = content[0]
         salesman_number = content[1]
         seq = content[2]
