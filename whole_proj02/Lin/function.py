@@ -147,16 +147,16 @@ def placeOrder():
     for row in reader:
         try:
             content = row[0].split('\t')
-            contract_num = row[0]
-            enterprise = row[1]
-            product_model = row[2]
-            quantity = int(row[3])
-            contract_manager_num = row[4]
-            contract_date = row[5]
-            estimated_delivery_date = row[6]
-            lodgement_date = row[7]
-            salesman_num = row[8]
-            contract_type = row[9]
+            contract_num = content[0]
+            enterprise = content[1]
+            product_model = content[2]
+            quantity = int(content[3])
+            contract_manager_num = content[4]
+            contract_date = content[5]
+            estimated_delivery_date = content[6]
+            lodgement_date = content[7]
+            salesman_num = content[8]
+            contract_type = content[9]
             if whetherStorageEnough(enterprise, product_model, quantity) and \
                     getStaffTypeByStaffNumber(salesman_num) == 'Salesman':
                 if not whetherContractNumberExist(contract_num):
@@ -837,7 +837,7 @@ where contract_number in (select distinct "order".contract_number
 if __name__ == '__main__':
     # product_number_list = ['A50L172']
     # contract_number_list = ['CSE0000106', 'CSE0000209', 'CSE0000306']
-    # oneStepImport()
+    oneStepImport()
     # f = open('my_output.txt', 'w', encoding='utf-8')
     # f.write(oneStepExport(product_number_list, contract_number_list))
     # f.close()
