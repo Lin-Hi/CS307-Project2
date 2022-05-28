@@ -16,13 +16,35 @@
                         <table class="table table-striped table-bordered table-hover">
                             <thead>
                             <tr>
-                                {% for i in labels %}
+                                {% for i in labels1 %}
                                 <th>{{ i }}</th>
                                 {% endfor %}
                             </tr>
                             </thead>
                             <tbody>
-                            {% for i in content %}
+                            {% for i in content1 %}
+                            <tr>
+                                {% for j in i %}
+                                <td>{{ j }}</td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-bordered table-hover">
+                            <thead>
+                            <tr>
+                                {% for i in labels2 %}
+                                <th>{{ i }}</th>
+                                {% endfor %}
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for i in content2 %}
                             <tr>
                                 {% for j in i %}
                                 <td>{{ j }}</td>
