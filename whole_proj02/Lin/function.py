@@ -1,13 +1,10 @@
 import csv
-import psycopg2
-from psycopg2 import extras
 from typing import List
 
-from psycopg2.pool import ThreadedConnectionPool
+import psycopg2
+from psycopg2 import extras
 
-pool = ThreadedConnectionPool(5, 100, "dbname=cs307_2 user=checker password=123456 host=localhost")  # 创建连接池连接
-conn = pool.getconn()
-# conn = psycopg2.connect("host=localhost dbname=cs307_2 user=checker password=123456")
+conn = psycopg2.connect("host=localhost dbname=cs307_3 user=checker password=123456")
 cur = conn.cursor()
 
 
@@ -34,7 +31,7 @@ def load_data(cur, path, table, page_size=100):
 def importFour():
     cur.execute(
         """truncate table center,contract,enterprise,model,"order",staff,stock,storage cascade;""")
-    path_pre = r"C:\Users\21414\PycharmProjects\database\proj2\Flask\bootstrap\Lin\files"
+    path_pre = "files"
     page_size = 1000
     load_data(cur, path_pre + '/center.csv', 'center', page_size)
     load_data(cur, path_pre + '/enterprise.csv', 'enterprise', page_size)
@@ -44,13 +41,11 @@ def importFour():
 
 def end():
     conn.commit()
-    # conn.close()
-    # close all connection
-    pool.putconn(conn, key=None, close=False)  # 这里close设置为true则会从连接池中关闭conn对象的连接
-    pool.closeall()  # 会关闭连接池内所有的连接
+    conn.close()
+
 
 def stockIn():
-    with open(r'files\in_stoke_test.csv', 'r',
+    with open(r'files\task1_in_stoke_test_data_publish.csv', 'r',
               encoding='utf-8') as f:
         f.readline()
         reader = csv.reader(f)
@@ -136,22 +131,21 @@ def getCenterByStaffNumber(staff_number: str) -> str:
 
 
 def placeOrder():
-    f = open(r'files\task2_test_data_final_public.tsv', 'r', encoding='utf-8')
+    f = open(r'files\task2_test_data_publish.csv', 'r', encoding='utf-8')
     f.readline()
     reader = csv.reader(f)
     for row in reader:
         try:
-            content = row[0].split('\t')
-            contract_num = content[0]
-            enterprise = content[1]
-            product_model = content[2]
-            quantity = int(content[3])
-            contract_manager_num = content[4]
-            contract_date = content[5]
-            estimated_delivery_date = content[6]
-            lodgement_date = content[7]
-            salesman_num = content[8]
-            contract_type = content[9]
+            contract_num = row[0]
+            enterprise = row[1]
+            product_model = row[2]
+            quantity = int(row[3])
+            contract_manager_num = row[4]
+            contract_date = row[5]
+            estimated_delivery_date = row[6]
+            lodgement_date = row[7]
+            salesman_num = row[8]
+            contract_type = row[9]
             if whetherStorageEnough(enterprise, product_model, quantity) and \
                     getStaffTypeByStaffNumber(salesman_num) == 'Salesman':
                 if not whetherContractNumberExist(contract_num):
@@ -181,7 +175,7 @@ def placeOrder():
                     cur.execute("""update storage
                                     set quantity = {}
                                     where supply_center = '{}'
-                                      and product_model = '{}';""" .format(
+                                      and product_model = '{}';""".format(
                         new_quantity, supply_center, product_model))
         except psycopg2.Error as e:
             print(e)
@@ -234,7 +228,7 @@ def whetherStorageEnough(enterprise: str, product_model: str, quantity: int) -> 
 
 
 def updateOrder():
-    f = open(r'files\update_final_test.tsv', 'r', encoding='utf-8')
+    f = open(r'files\task34_update_test_data_publish.tsv', 'r', encoding='utf-8')
     f.readline()
     reader = csv.reader(f)
     for row in reader:
@@ -325,7 +319,7 @@ def deleteOrder():
     f.readline()
     reader = csv.reader(f)
     for row in reader:
-        content = row[0].split(' ')
+        content = row[0].split('\t')
         contract_number = content[0]
         salesman_number = content[1]
         seq = content[2]
@@ -396,7 +390,7 @@ def getAllStaffCount():
     cur.execute("""select type, count(*)
                     from staff
                     group by type;""")
-    ans = cur.fetchall()
+    ans = cur.fetchall()[0][0]
     conn.commit()
     return ans
 
@@ -601,7 +595,8 @@ def oneStepExport(product_number_list: [str], contract_number_list: [str]) -> st
             )
             for row in q13_list2:
                 output_13 += (
-                        '{0:<' + str(length0_13) + '}{1:<' + str(length1_13) + '}{2:<' + str(length2_13) + '}{3:<' + str(
+                        '{0:<' + str(length0_13) + '}{1:<' + str(length1_13) + '}{2:<' + str(
+                    length2_13) + '}{3:<' + str(
                     length3_13) + '}{4:<' + str(length4_13) + '}{5}\n').format(
                     row[0], row[1], row[2], row[3], str(row[4]), str(row[5])
                 )
@@ -610,38 +605,226 @@ def oneStepExport(product_number_list: [str], contract_number_list: [str]) -> st
     return final_output
 
 
-if __name__ == '__main__':
-    product_number_list = ['A50L172']
-    contract_number_list = ['CSE0000106', 'CSE0000209', 'CSE0000306']
+def oneStepImport():
     importFour()
-    conn.commit()
     stockIn()
-    conn.commit()
     placeOrder()
-    conn.commit()
     updateOrder()
-    conn.commit()
     deleteOrder()
-    # operation = input()
-    # while operation != "q":
-    #     if operation == "12":
-    #         a = input()
-    #         print(getProductByNumber(a))
-    #     if operation == "13":
-    #         a = input()
-    #         print(getContractInfo(a))
-    #     if operation == "6":
-    #         getStaffTypeByStaffNumber()
-    #     operation = input()
-    print(getProductByNumber("FK39705"))
-    print(getProductByNumber("E8T2037"))
-    print(getProductByNumber("T28310Y"))
-    print(getContractInfo("CSE0000326"))
-    print(getContractInfo("CSE0000420"))
-    # print(getProductByNumber("F6L2495"))
-    # conn.commit()
+
+
+def getBestSalesman(type: str):
+    if type == 'amount':
+        cur.execute("""select *
+from (select t1.salesman_number, s.name, rank() over (order by t1.s desc ) as rank, t1.s as sale_amount
+      from (select o.salesman_number, sum(o.quantity * m.unit_price) as s
+            from "order" o
+                     join model m on o.product_model = m.model
+            group by o.salesman_number) t1
+               join staff s on t1.salesman_number = s.number) t2
+where t2.rank <= 10;""")
+        res = cur.fetchall()
+        conn.commit()
+        return res
+    elif type == 'model':
+        cur.execute("""select *
+from (select t1.salesman_number                           as staff_number,
+             s.name                                       as staff_name,
+             rank() over (order by t1.model_amount desc ) as rank,
+             t1.model_amount
+      from (select o.salesman_number, sum(o.quantity) as model_amount
+            from "order" o
+            group by o.salesman_number) t1
+               join staff s on t1.salesman_number = s.number) t2
+where rank <= 10;""")
+        res = cur.fetchall()
+        conn.commit()
+        return res
+    else:
+        cur.execute("""select t2.staff_number,
+       t2.staff_name,
+       t2.rank,
+       t2.order_count
+from (select t1.salesman_number                       as staff_number,
+             s.name                                   as staff_name,
+             t1.order_count,
+             rank() over (order by order_count desc ) as rank
+      from (select o.salesman_number,
+                   count((o.salesman_number, o.product_model, o.contract_number)) as order_count
+            from "order" o
+            group by o.salesman_number) t1
+               join staff s on t1.salesman_number = s.number) t2
+where t2.rank <= 10;""")
+        res = cur.fetchall()
+        conn.commit()
+        return res
+
+
+def getBestProfitProductModel():
+    cur.execute("""select t4.product_model,t4.total_profit,t4.quantity
+from (select t3.*,rank() over (order by total_profit desc ) as rank
+from (select t1.product_model, (total_sale_price - total_purchase_price) as total_profit, t2.quantity
+from (select s1.product_model, sum(s1.quantity * s1.purchase_price) as total_purchase_price
+      from stock s1
+      group by s1.product_model) t1
+         join
+     (select t.product_model, (t.sum * m.unit_price) as total_sale_price, s2.quantity
+      from (select s.product_model, sum(s.quantity) as sum
+            from stock s
+            group by s.product_model) t
+               join model m on t.product_model = m.model
+               join stock s2 on m.model = s2.product_model) t2
+     on t1.product_model = t2.product_model) t3) t4
+where t4.rank <= 10;""")
+    res = cur.fetchall()
     conn.commit()
-    # conn.close()    # print(getProductByNumber("F6L2495"))
+    return res
+
+
+def getOrderBetweenDates(date1: str, date2: str, enterprise: str, contract_num: str):
+    stm = """select c.contract_date, o.*
+from "order" o
+         join contract c on o.contract_number = c.contract_number
+where c.contract_date between '%s' and '%s'""" % (date1, date2)
+    if whetherEnterpriseExist(enterprise):
+        stm += """
+  and c.enterprise_name = '%s'""" % enterprise
+    if whetherContractNumberExist(contract_num):
+        stm += """
+  and o.contract_number = '%s';""" % contract_num
+    stm += ';'
+    cur.execute(stm)
+    res = cur.fetchall()
+    conn.commit()
+    return res
+
+
+def whetherEnterpriseExist(enterprise_name: str) -> bool:
+    cur.execute("""select count(*) from enterprise where name = '%s';""" % enterprise_name)
+    ans = int(cur.fetchall()[0][0]) > 0
+    conn.commit()
+    return ans
+
+
+def whetherContractNumberExist(contract_number: str) -> bool:
+    cur.execute("""select count(*) from contract where contract_number = '%s';""" % contract_number)
+    ans = int(cur.fetchall()[0][0]) > 0
+    conn.commit()
+    return ans
+
+
+def getMostModelEnterpriseRecent():
+    cur.execute("""select *
+from (select t1.*, rank() over (order by deals desc ) as rank
+from (select sum(o.quantity) as deals, c.enterprise_name
+      from "order" o
+               join contract c on o.contract_number = c.contract_number
+      where c.contract_type = 'Finished'
+        and c.contract_date >= date(now() - interval '1' year)
+      group by c.enterprise_name) t1) t2
+where t2.rank <= 10;""")
+    res = cur.fetchall()
+    conn.commit()
+    return res
+
+
+def getLossProductModel():
+    cur.execute("""(select product_model
+ from (select distinct s.product_model, sum(s.quantity * s.purchase_price) as total_purchase_money
+       from stock s
+       where s.product_model in (select distinct product_model
+                                 from stock
+                                 except
+                                 select distinct product_model
+                                 from storage)
+       group by s.product_model) t2
+          join
+      (select distinct m.model, sum(o.quantity * m.unit_price) as total_sale_money
+       from "order" o
+                join model m on o.product_model = m.model
+       where m.model in (select distinct product_model
+                         from stock
+                         except
+                         select distinct product_model
+                         from storage)
+       group by m.model) t3
+      on t2.product_model = t3.model
+ where total_purchase_money > total_sale_money)
+union
+select s3.product_model
+from stock s3
+where s3.product_model in (select distinct s1.product_model
+                           from stock s1
+                           except
+                           select distinct s2.product_model
+                           from storage s2)
+  and s3.date < date(now() - interval '1' year);""")
+    res = cur.fetchall()
+    conn.commit()
+    return res
+
+
+def getOrderEachMonth(center: str):
+    stm = """with t1 as (select to_char(c.contract_date, 'mm')                                          as month,
+                   count(distinct (o.contract_number, o.product_model, o.salesman_number)) as order_cnt,
+                   s.supply_center
+            from "order" o
+                     join contract c on o.contract_number = c.contract_number
+                     join staff s on o.salesman_number = s.number
+            group by to_char(c.contract_date, 'mm'), s.supply_center)
+select t1.month, sum(t1.order_cnt) as order_count
+from t1"""
+    if whetherSupplyCenterExist(center):
+        stm += """
+where t1.supply_center = '%s'""" % center
+    stm += """
+group by t1.month;"""
+    cur.execute(stm)
+    res = cur.fetchall()
+    conn.commit()
+    return res
+
+
+def getProfitBetweenDates(date1: str, date2: str):
+    cur.execute("""select earn - cost as profit
+from ((select coalesce(sum(quantity * stock.purchase_price), 0) as cost
+       from stock
+       where date between '%s' and '%s') t_cost
+    cross join
+    (select coalesce(sum(t2.quantity * m.unit_price), 0) as earn
+     from (select o.product_model, o.quantity
+           from (select c.contract_number
+                 from contract c
+                 where contract_date between '%s' and '%s'
+                   and contract_type = 'Finished') t1
+                    join "order" o on t1.contract_number = o.contract_number) t2
+              join model m on m.model = t2.product_model) t_earn);"""
+                % (date1, date2, date1, date2))
+    res = cur.fetchall()[0][0]
+    conn.commit()
+    return res
+
+
+def setNowDate(date: str):
+    cur.execute("""update contract
+set contract_type = 'Unfinished'
+where contract_number in (select distinct "order".contract_number
+                          from "order"
+                          where lodgement_date > '%s');
+update contract
+set contract_type = 'Finished'
+where contract_number in (select distinct "order".contract_number
+                          from "order"
+                          where lodgement_date <= '%s');"""
+                % (date, date))
+    conn.commit()
+    return
+
+
+if __name__ == '__main__':
+    # product_number_list = ['A50L172']
+    # contract_number_list = ['CSE0000106', 'CSE0000209', 'CSE0000306']
+    # oneStepImport()
     # f = open('my_output.txt', 'w', encoding='utf-8')
     # f.write(oneStepExport(product_number_list, contract_number_list))
     # f.close()
