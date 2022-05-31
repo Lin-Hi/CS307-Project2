@@ -611,9 +611,28 @@ def getAvgStockByCenter():
     return render_template('show_result.html', title="Get AvgStock By Center", labels=label, content=content, )
 
 
+@app.route('/getBestProfitProductModel/', methods=['GET'])
+def getBestProfitProductModel():
+    content = api.getBestProfitProductModel()
+    label = ['Product Model', 'profit','count']
+    return render_template('show_result.html', title="Get Best Profit Product Model", labels=label, content=content, )
+
+@app.route('/getMostModelEnterpriseRecent/', methods=['GET'])
+def getMostModelEnterpriseRecent():
+    content = api.getMostModelEnterpriseRecent()
+    label = ['Profit', 'Enterprise','Rank']
+    return render_template('show_result.html', title="Get Most Model Enterprise Recent", labels=label, content=content, )
+
+
+@app.route('/getLossProductModel/', methods=['GET'])
+def getLossProductModel():
+    content = api.getLossProductModel()
+    label = ['Product Model']
+    return render_template('show_result.html', title="Get Loss Product Model", labels=label, content=content, )
+
+
 @app.route('/', methods=['GET', 'POST'])
 def home():
-    a = request
     print(request)
     if (request.method == 'POST'):
         if (request.form.get('product_number') != None):
@@ -625,6 +644,33 @@ def home():
             label1 = ['contract_number', 'enterprise', 'manager', 'supply_center']
             label2 = ['product_model', 'salesman', 'quantity', 'unit_price', 'estimate_delivery_date', 'lodgement_date']
             return render_template('show_contract.html', title="Get ContractInfo", labels1=label1, content1=[content1], labels2=label2, content2=content2)
+
+        if (request.form.get('type') != None):
+            choice = 'amount' if request.form.get('type')=='1' else ('model' if request.form.get('type')=='2' else 'order')
+            print(choice)
+            content = api.getBestSalesman(choice)
+            label = ['id', 'name','rank',choice]
+            return render_template('show_result.html', title="Get Best Salesman by "+choice, labels=label, content=content)
+
+        if (request.form.get('date1') != None):
+            enterprise = request.form.get('enterprise') if request.form.get('enterprise') != None else ''
+            contract_num = request.form.get('contract_num') if request.form.get('contract_num') != None else ''
+            content = api.getOrderBetweenDates(request.form.get('date1'),request.form.get('date2'),enterprise,contract_num)
+            label = ['contract_date','contract_number','product_model','salesman_number','quantity','estimate_delivery_date','lodgement_date']
+            return render_template('show_result.html', title="Get Order Between Dates", labels=label, content=content)
+
+        if (request.form.get('date01') != None):
+            content = api.getProfitBetweenDates(request.form.get('date01'),request.form.get('date02'))
+            label = ['Profit']
+            return render_template('show_result.html', title="Get Profit Between Dates", labels=label, content=[[content]])
+
+        if (request.form.get('date03') != None):
+            api.setNowDate(request.form.get('date03'))
+
+        if (request.form.get('center') != None):
+            content = api.getOrderEachMonth(request.form.get('center'))
+            label = ['Month','Order Count']
+            return render_template('show_result.html', title="Get Order Each Month", labels=label, content=content)
 
     if len(request.args) > 0:
         print(request.args.get('api'))

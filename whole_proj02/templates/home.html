@@ -169,7 +169,7 @@
             </h3>
             <dl>
                 <dt>
-                    <span>Import into four basic tables and update tables "stock" and "order"</span>
+                    <span>Import into four basic tables and execute stock in and place/update/delete order.</span>
                 </dt>
             </dl>
             <button type="button" class="btn btn-lg btn-primary" id="myButton2"
@@ -458,9 +458,214 @@
                 </div>
             </form>
         </div>
+
+        <!--    row-6-->
+        <!--    col-1-->
+        <div class="row clearfix">
+            <div class="col-md-4 column">
+                <h3>
+                    getBestSalesman
+                </h3>
+                <dl>
+                    <dt>
+                        <span>Return the best salesman with the largest sales/product/order amount.</span>
+                    </dt>
+                </dl>
+                <form method="post" role="form">
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">Type</label>
+                        <div class="col-sm-10">
+                            <select name="type" id="type" class="form-control">
+                                <option>amount</option>
+                                <option>model</option>
+                                <option>order</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-sm-offset-2 col-sm-10">
+                            <button type="submit" class="btn btn-default">Search</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <!--    col-2-->
+
+            <div class="col-md-4 column">
+                <h3>
+                    Get Best Profit Product Model
+                </h3>
+                <dl>
+                    <dt>
+                        <span>Return the product model with the best profit.</span>
+                    </dt>
+                </dl>
+                <a type="button" class="btn btn-link btn-lg" href="http://127.0.0.1:5000/getBestProfitProductModel/">View
+                    details
+                    »
+                </a>
+            </div>
+            <!--    col-3-->
+            <div class="col-md-4 column">
+
+                <h3>
+                    Get Order Between Dates
+                </h3>
+                <dl>
+                    <dt>
+                        <span>Return the orders between specific dates.</span>
+                    </dt>
+                </dl>
+                <form method="post" class="form-horizontal" role="form">
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">date1</label>
+                        <div class="col-sm-10">
+                            <input name="date1" type="text" class="form-control" id="date1">
+                        </div>
+                        <label class="col-sm-2 control-label">date2</label>
+                        <div class="col-sm-10">
+                            <input name="date2" type="text" class="form-control" id="date2">
+                        </div>
+                        <label class="col-sm-2 control-label">enterprise</label>
+                        <div class="col-sm-10">
+                            <input name="enterprise" type="text" class="form-control" id="enterprise">
+                        </div>
+                        <label class="col-sm-2 control-label">Contract number</label>
+                        <div class="col-sm-10">
+                            <input name="contract_num" type="text" class="form-control" id="contract_num">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-sm-offset-2 col-sm-10">
+                            <button type="submit" class="btn btn-default">Search</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!--    row-7-->
+        <!--    col-1-->
+        <div class="row clearfix">
+            <div class="col-md-4 column">
+                <h3>
+                    Get Most Model Enterprise Recent
+                </h3>
+                <dl>
+                    <dt>
+                        <span>Return the name of the company with the most product models with all suppliers in the latest year, and take the top ten.</span>
+                    </dt>
+                </dl>
+                <a type="button" class="btn btn-link btn-lg" href="http://127.0.0.1:5000/getMostModelEnterpriseRecent/">View
+                    details
+                    »
+                </a>
+            </div>
+            <!--    col-2-->
+
+            <div class="col-md-4 column">
+                <h3>
+                    Get Loss Product Model
+                </h3>
+                <dl>
+                    <dt>
+                        <span>Among the products that have been sold out, return products with negative profit and products that have never been sold after one year of purchase.</span>
+                    </dt>
+                </dl>
+                <a type="button" class="btn btn-link btn-lg" href="http://127.0.0.1:5000/getLossProductModel/">View
+                    details
+                    »
+                </a>
+            </div>
+            <!--    col-3-->
+            <div class="col-md-4 column">
+
+                <h3>
+                    Get Order Each Month
+                </h3>
+                <dl>
+                    <dt>
+                        <span>Return the number of orders per month (for a supply center).</span>
+                    </dt>
+                </dl>
+                <form method="post" class="form-horizontal" role="form">
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">center</label>
+                        <div class="col-sm-10">
+                            <input name="center" type="text" class="form-control" id="center">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-sm-offset-2 col-sm-10">
+                            <button type="submit" class="btn btn-default">Search</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+
+        <!--    row-8-->
+        <!--    col-1-->
+        <div class="row clearfix">
+            <div class="col-md-4 column">
+
+                <h3>
+                    Get Profit Between Dates
+                </h3>
+                <dl>
+                    <dt>
+                        <span>Return the profits made between two specific dates.</span>
+                    </dt>
+                </dl>
+                <form method="post" class="form-horizontal" role="form">
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">date1</label>
+                        <div class="col-sm-10">
+                            <input name="date01" type="text" class="form-control" id="date01">
+                        </div>
+                        <label class="col-sm-2 control-label">date2</label>
+                        <div class="col-sm-10">
+                            <input name="date02" type="text" class="form-control" id="date02">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-sm-offset-2 col-sm-10">
+                            <button type="submit" class="btn btn-default">Search</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <!--    col-2-->
+
+            <div class="col-md-4 column">
+                <h3 class="text-left">
+                </h3>
+                <h3>
+                    Set Now Date
+                </h3>
+                <dl>
+                    <dt>
+                        <span>Set the current date, the current date and past orders will become Finished, and future orders will become Unfinished.</span>
+                    </dt>
+                </dl>
+                <form method="post" class="form-horizontal" role="form">
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">now date</label>
+                        <div class="col-sm-10">
+                            <input name="date03" type="text" class="form-control" id="date03">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-sm-offset-2 col-sm-10">
+                            <button type="submit" class="btn btn-default">Set</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+
     </div>
-
-
-</div>
 </body>
 </html>

@@ -403,7 +403,7 @@ def getAllStaffCount():
     cur.execute("""select type, count(*)
                     from staff
                     group by type;""")
-    ans = cur.fetchall()[0][0]
+    ans = cur.fetchall()
     conn.commit()
     return ans
 
@@ -674,20 +674,19 @@ where t2.rank <= 10;""")
 
 
 def getBestProfitProductModel():
-    cur.execute("""select t4.product_model,t4.total_profit,t4.quantity
-from (select t3.*,rank() over (order by total_profit desc ) as rank
-from (select t1.product_model, (total_sale_price - total_purchase_price) as total_profit, t2.quantity
-from (select s1.product_model, sum(s1.quantity * s1.purchase_price) as total_purchase_price
-      from stock s1
-      group by s1.product_model) t1
-         join
-     (select t.product_model, (t.sum * m.unit_price) as total_sale_price, s2.quantity
-      from (select s.product_model, sum(s.quantity) as sum
-            from stock s
-            group by s.product_model) t
-               join model m on t.product_model = m.model
-               join stock s2 on m.model = s2.product_model) t2
-     on t1.product_model = t2.product_model) t3) t4
+    cur.execute("""select t4.product_model, t4.total_profit, t4.quantity
+from (select t3.*, rank() over (order by total_profit desc ) as rank
+      from (select t1.product_model, (total_sale_price - total_purchase_price) as total_profit, t2.quantity
+            from (select s1.product_model, sum(s1.quantity * s1.purchase_price) as total_purchase_price
+                  from stock s1
+                  group by s1.product_model) t1
+                     join
+                 (select t.product_model, (t.sum * m.unit_price) as total_sale_price, t.sum as quantity
+                  from (select s.product_model, sum(s.quantity) as sum
+                        from stock s
+                        group by s.product_model) t
+                           join model m on t.product_model = m.model) t2
+                 on t1.product_model = t2.product_model) t3) t4
 where t4.rank <= 10;""")
     res = cur.fetchall()
     conn.commit()
@@ -835,10 +834,10 @@ where contract_number in (select distinct "order".contract_number
 
 
 if __name__ == '__main__':
-    # product_number_list = ['A50L172']
-    # contract_number_list = ['CSE0000106', 'CSE0000209', 'CSE0000306']
     oneStepImport()
-    # f = open('my_output.txt', 'w', encoding='utf-8')
-    # f.write(oneStepExport(product_number_list, contract_number_list))
-    # f.close()
+    product_number_list = ['A50L172']
+    contract_number_list = ['CSE0000106', 'CSE0000209', 'CSE0000306']
+    f = open('my_output.txt', 'w', encoding='utf-8')
+    f.write(oneStepExport(product_number_list, contract_number_list))
+    f.close()
     end()
